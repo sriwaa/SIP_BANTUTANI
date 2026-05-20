@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrasi - SIP-BANTU TANI</title>
+    <style>
+        /* Reset & Base Styling */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #fbc02d; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
+
+        /* Mockup Container */
+        .phone-container {
+            width: 100%; max-width: 412px; height: 860px; max-height: 90vh;
+            background-color: white; border-radius: 36px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
+        }
+
+        /* Header Hijau */
+        .header-area {
+            background-color: #007A33;
+            color: white;
+            padding: 40px 30px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+
+        .back-btn {
+            color: white; font-size: 24px; cursor: pointer; margin-bottom: 20px; display: inline-block;
+        }
+
+        .header-area h1 { font-size: 22px; margin-bottom: 10px; }
+        .header-area p { font-size: 13px; opacity: 0.9; line-height: 1.4; }
+
+        /* Form Styling */
+        .form-area { padding: 30px; flex-grow: 1; }
+        .label { display: block; font-weight: 600; font-size: 14px; margin-top: 15px; color: #333; }
+        
+        .input-box {
+            width: 100%; padding: 14px; margin-top: 8px; border: 1px solid #ddd;
+            border-radius: 12px; font-size: 14px; background: #f9f9f9;
+        }
+
+        .btn-create {
+            width: 100%; padding: 16px; background-color: #39FF14;
+            border: none; border-radius: 12px; margin-top: 35px;
+            font-weight: bold; font-size: 16px; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <div class="header-area">
+            <div class="back-btn" onclick="history.back()">&#8592;</div>
+            <h1>Selamat Datang!</h1>
+            <p>Silahkan buat akun untuk melanjutkan ke SIP-BANTU TANI</p>
+        </div>
+
+        <div class="form-area">
+            <label class="label">NIK</label>
+            <input type="text" class="input-box" placeholder="Masukkan NIK">
+
+            <label class="label">Nama</label>
+            <input type="text" class="input-box" placeholder="Masukkan Nama">
+
+            <label class="label">No Telepon</label>
+            <input type="tel" class="input-box" placeholder="Masukkan Nomor Telepon">
+
+            <label class="label">Password</label>
+            <input type="password" class="input-box" placeholder="Masukkan Password">
+
+            <button class="btn-create">Create Account</button>
+        </div>
+    </div>
+
+</body>
+</html>
