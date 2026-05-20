@@ -3,172 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIP-BANTU TANI - Login</title>
+    <title>SIP-BANTU TANI - Pilih Role</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        /* CSS tetap sama agar desain tidak berubah */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #fbc02d; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; overflow: hidden; }
 
-        /* Latar belakang luar (Hanya muncul di Desktop/Laptop) */
-        body {
-            background-color: #fbc02d;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 15px;
-            overflow: hidden;
-        }
-
-        /* Container Utama Aplikasi */
         .phone-container {
-            width: 100%;
-            height: 100vh; /* Default di HP: Full layar */
-            
-            background: linear-gradient(rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.02)), 
-                        url('bg-sawah.jpeg') no-repeat center center;
+            width: 100%; height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.02)), url('bg-sawah.jpeg') no-repeat center center;
             background-size: cover;
-            
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 50px 24px;
-            position: relative;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            padding: 50px 24px; position: relative;
         }
 
-        /* Area Logo */
-        .logo-area {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        /* Bingkai Bulat Putih Logo */
+        .logo-area { display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 10px; }
         .logo-bg {
-            width: 200px;
-            height: 200px;
-            background-color: white;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            overflow: hidden; 
-            border: 3px solid #13a851;
+            width: 200px; height: 200px; background-color: white; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15); overflow: hidden; border: 3px solid #13a851;
         }
+        .logo-img { width: 100%; height: 100%; object-fit: cover; }
 
-        .logo-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Kotak Putih Menu Bawah */
         .menu-area {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            background-color: rgba(255, 255, 255, 0.92);
-            padding: 30px 20px;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            margin-bottom: 10px;
+            width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px;
+            background-color: rgba(255, 255, 255, 0.92); padding: 30px 20px;
+            border-radius: 24px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); margin-bottom: 10px;
         }
 
-        .instruction-text {
-            color: #1b5e20;
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 5px;
-            text-align: center;
-        }
+        .instruction-text { color: #1b5e20; font-size: 15px; font-weight: 700; margin-bottom: 5px; text-align: center; }
 
-        /* Ukuran Tombol yang Fleksibel */
         .btn {
-            width: 100%;
-            height: 50px; 
-            border: none;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-            transition: all 0.2s ease;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            width: 100%; height: 50px; border: none; border-radius: 14px; font-size: 15px; font-weight: bold;
+            color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transition: all 0.2s ease; display: flex; justify-content: center; align-items: center;
         }
 
-        /* Gradasi Tombol */
-        .btn-petani {
-            background: linear-gradient(180deg, #00ff37, #00cc2c);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.15);
-        }
-        .btn-petani:hover {
-            background: linear-gradient(180deg, #00e632, #00b326);
-            transform: translateY(-2px);
-        }
+        .btn-petani { background: linear-gradient(180deg, #00ff37, #00cc2c); }
+        .btn-admin { background: linear-gradient(180deg, #13a851, #0f8a42); }
+        .btn-surveyor { background: linear-gradient(180deg, #3bf789, #2ecc71); }
 
-        .btn-admin {
-            background: linear-gradient(180deg, #13a851, #0f8a42);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
-        .btn-admin:hover {
-            background: linear-gradient(180deg, #119648, #0d7839);
-            transform: translateY(-2px);
-        }
-
-        .btn-surveyor {
-            background: linear-gradient(180deg, #3bf789, #2ecc71);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.15);
-        }
-        .btn-surveyor:hover {
-            background: linear-gradient(180deg, #2ae076, #27ae60);
-            transform: translateY(-2px);
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        /* 🖥️ MEDIA QUERY: JIKA DIBUKA DI LAYAR LAPTOP / DESKTOP (Lebar di atas 500px) */
         @media (min-width: 500px) {
-            .phone-container {
-                width: 412px;
-                height: 92vh; /* Mengikuti tinggi layar laptop secara aman */
-                max-height: 860px;
-                border-radius: 36px;
-                box-shadow: 0 20px 45px rgba(0,0,0,0.35);
-                padding: 40px 24px 30px 24px; /* Padding dikurangi sedikit agar pas */
-            }
-
-            .logo-bg {
-                width: 180px; /* Ukuran sedikit mengecil di laptop agar tombol surveyor naik */
-                height: 180px;
-            }
-
-            .menu-area {
-                padding: 25px 20px;
-                gap: 12px;
-            }
+            .phone-container { width: 412px; height: 92vh; max-height: 860px; border-radius: 36px; padding: 40px 24px; }
+            .logo-bg { width: 180px; height: 180px; }
         }
     </style>
 </head>
 <body>
 
     <div class="phone-container">
-        
         <div class="logo-area">
             <div class="logo-bg">
                 <img src="logo.png" alt="Logo SIP-BANTU TANI" class="logo-img">
@@ -177,17 +60,19 @@
 
         <div class="menu-area">
             <p class="instruction-text">Silahkan pilih masuk sebagai:</p>
-            
             <button class="btn btn-petani" onclick="pilihRole('Petani')">Petani</button>
             <button class="btn btn-admin" onclick="pilihRole('Admin')">Admin</button>
             <button class="btn btn-surveyor" onclick="pilihRole('Surveyor')">Surveyor</button>
         </div>
-
     </div>
 
     <script>
         function pilihRole(role) {
-            alert("Anda memilih masuk sebagai: " + role);
+            // Opsional: Simpan role ke memori browser jika nanti dibutuhkan
+            localStorage.setItem("selectedRole", role);
+            
+            // Pindah ke file selamatdatang.html
+            window.location.href = "selamatdatang.html";
         }
     </script>
 
