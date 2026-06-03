@@ -18,13 +18,15 @@ $koneksi = mysqli_connect($host, $db_user, $db_pass, $db_name);
 if (!$koneksi) {
     die("Koneksi gagal: " . mysqli_connect_error());
 }
-// 3. AMBIL DATA DENGAN JOIN AGAR BISA MENGAMBIL NAMA DAN ALAMAT PETANI
+
+// 3. AMBIL DATA DENGAN JOIN (Menghubungkan pengajuan, petani, dan program bantuan)
 $query_petani = mysqli_query($koneksi, "
-    SELECT p.nik, p.nama_lengkap, p.alamat 
+    SELECT p.nik, p.nama_lengkap, p.alamat, b.nama_program, a.tanggal_pengajuan 
     FROM admin_pengajuanbantuan a
     JOIN admin_datapetani p ON a.nik = p.nik
+    JOIN admin_programbantuan b ON a.id_program = b.id_program
     WHERE a.status_pengajuan = 'Tahap Survey'
-    LIMIT 3
+    ORDER BY a.tanggal_pengajuan ASC
 ");
 ?>
 
@@ -40,7 +42,7 @@ $query_petani = mysqli_query($koneksi, "
         body { background-color: #fbc02d; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .dashboard-container { width: 100%; max-width: 1280px; height: 850px; max-height: 92vh; background-color: white; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); display: flex; overflow: hidden; }
         
-        /* SIDEBAR (KONSISTEN) */
+        /* SIDEBAR */
         .sidebar { width: 280px; background-color: #0d7839; color: white; display: flex; flex-direction: column; align-items: center; padding: 40px 0; flex-shrink: 0; }
         .sidebar-logo-area { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 20px; margin-bottom: 40px; }
         .sidebar-logo-bg { width: 90px; height: 90px; background-color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 2px solid #13a851; margin-bottom: 12px; }
@@ -61,8 +63,9 @@ $query_petani = mysqli_query($koneksi, "
         /* TABEL */
         .data-table-container { width: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; }
         .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        .data-table th { background-color: #e9ecef; color: #495057; padding: 14px 16px; font-weight: bold; }
+        .data-table th { background-color: #f8f9fa; color: #495057; padding: 14px 16px; font-weight: bold; border-bottom: 2px solid #dee2e6; }
         .data-table td { padding: 14px 16px; color: #212529; border-bottom: 1px solid #dee2e6; }
+        .badge { background-color: #e8f5e9; color: #0d7839; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
         .btn-aksi { background-color: #13a851; color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; font-size: 12px; font-weight: bold; }
         .btn-aksi:hover { background-color: #0f8a42; }
     </style>
@@ -96,7 +99,7 @@ $query_petani = mysqli_query($koneksi, "
         <main class="main-content">
             <div class="page-header">
                 <h1 class="page-title">Tugas Lapangan</h1>
-                <p>Berikut adalah <strong>3 prioritas utama</strong> data petani yang menunggu survei:</p>
+                <p>Berikut adalah daftar pengajuan bantuan yang menunggu proses verifikasi survei:</p>
             </div>
 
             <div class="data-table-container">
@@ -104,8 +107,9 @@ $query_petani = mysqli_query($koneksi, "
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>NIK</th>
-                            <th>Nama Petani</th>
+                            <th>Petani</th>
+                            <th>Jenis Bantuan</th>
+                            <th>Tanggal</th>
                             <th>Alamat</th>
                             <th>Aksi</th>
                         </tr>
@@ -117,15 +121,16 @@ $query_petani = mysqli_query($koneksi, "
                             while ($row = mysqli_fetch_assoc($query_petani)) { ?>
                                 <tr>
                                     <td><?php echo $no++; ?></td>
-                                    <td><?php echo htmlspecialchars($row['nik']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['nama_lengkap']); ?></td>
+                                    <td><strong><?php echo htmlspecialchars($row['nama_lengkap']); ?></strong><br><small style="color: #6c757d;"><?php echo $row['nik']; ?></small></td>
+                                    <td><span class="badge"><?php echo htmlspecialchars($row['nama_program']); ?></span></td>
+                                    <td><?php echo date('d M Y', strtotime($row['tanggal_pengajuan'])); ?></td>
                                     <td><?php echo htmlspecialchars($row['alamat']); ?></td>
                                     <td><a href="#" class="btn-aksi">Survei</a></td>
                                 </tr>
                             <?php } 
                         } else { ?>
                             <tr>
-                                <td colspan="5" style="text-align: center; padding: 20px; color: #6c757d;">Tidak ada tugas survei saat ini.</td>
+                                <td colspan="6" style="text-align: center; padding: 20px; color: #6c757d;">Tidak ada tugas survei saat ini.</td>
                             </tr>
                         <?php } ?>
                     </tbody>

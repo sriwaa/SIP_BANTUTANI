@@ -42,15 +42,20 @@
             padding: 40px 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
         .selection-title { color: #0d7839; font-size: 20px; font-weight: 700; margin-bottom: 35px; }
+        
         .button-group { display: flex; flex-direction: column; gap: 18px; }
 
+        /* Penyesuaian untuk menu Petani */
+        .petani-menu { display: flex; gap: 10px; }
         .btn-role {
             display: block; text-decoration: none; text-align: center;
             padding: 16px 0; border-radius: 12px; font-size: 16px; font-weight: 700;
             color: white; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .btn-petani { background: linear-gradient(135deg, #00ff37, #00db2e); }
-        .btn-admin { background: linear-gradient(135deg, #0d7839, #0a5c2c); }
+        .btn-petani-login { background: linear-gradient(135deg, #00ff37, #00db2e); flex: 1; }
+        .btn-petani-daftar { background: linear-gradient(135deg, #0d7839, #0a5c2c); flex: 1; font-size: 14px; }
+        
+        .btn-admin { background: linear-gradient(135deg, #555, #333); }
         .btn-surveyor { background: linear-gradient(135deg, #2eff94, #24db7f); }
         .btn-role:hover { transform: translateY(-2px); filter: brightness(1.1); }
     </style>
@@ -66,7 +71,12 @@
             <div class="selection-box">
                 <h2 class="selection-title">Silahkan pilih masuk sebagai:</h2>
                 <div class="button-group">
-                    <a href="#" class="btn-role btn-petani">Petani</a>
+                    <!-- Menu Petani (Login/Daftar) -->
+                    <div class="petani-menu">
+                        <a href="petani_login.php" class="btn-role btn-petani-login">Login</a>
+                        <a href="petani_daftar.php" class="btn-role btn-petani-daftar">Daftar</a>
+                    </div>
+                    
                     <a href="admin_login.php" class="btn-role btn-admin">Admin</a>
                     <a href="surveyor_login.php" class="btn-role btn-surveyor">Surveyor</a>
                 </div>
