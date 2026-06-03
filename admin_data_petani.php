@@ -1,3 +1,40 @@
+<?php
+// 1. PROTEKSI HALAMAN (Wajib Login Admin)
+session_start();
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Admin') {
+    header("Location: admin_login.php");
+    exit();
+}
+
+// 2. KONEKSI DATABASE
+$host     = "localhost";
+$db_user  = "root";
+$db_pass  = "";
+$db_name  = "sip_bantutani";
+
+$koneksi = mysqli_connect($host, $db_user, $db_pass, $db_name);
+
+if (!$koneksi) {
+    die("Koneksi gagal: " . mysqli_connect_error());
+}
+
+// 3. LOGIKA PENCARIAN DATA PETANI
+$keyword = "";
+if (isset($_GET['cari'])) {
+    $keyword = mysqli_real_escape_string($koneksi, $_GET['cari']);
+    // PERBAIKAN: Mengubah 'nama' menjadi 'nama_lengkap' sesuai kolom asli database
+    $query = "SELECT * FROM admin_datapetani 
+              WHERE nama_lengkap LIKE '%$keyword%' 
+              OR nik LIKE '%$keyword%' 
+              ORDER BY id ASC";
+} else {
+    // Jika tidak sedang mencari, tampilkan semua data
+    $query = "SELECT * FROM admin_datapetani ORDER BY id ASC";
+}
+
+$result = mysqli_query($koneksi, $query);
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -107,7 +144,6 @@
             cursor: pointer;
         }
 
-        /* Di file ini, menu Data Petani yang aktif */
         .menu-item.active {
             background-color: rgba(255, 255, 255, 0.15);
             border-left: 5px solid #3bf789;
@@ -155,10 +191,14 @@
             width: 100%;
         }
 
-        .search-box-container {
-            position: relative;
+        .search-form {
             flex-grow: 1;
             max-width: 600px;
+        }
+
+        .search-box-container {
+            position: relative;
+            width: 100%;
         }
 
         .search-input {
@@ -193,6 +233,7 @@
             gap: 8px;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(19, 168, 81, 0.2);
+            text-decoration: none;
         }
 
         .btn-tambah:hover {
@@ -223,7 +264,7 @@
 
         .data-table th {
             background-color: #ffffff;
-            color: #13a851; /* Judul Kolom Hijau sesuai mockup */
+            color: #13a851;
             padding: 14px 16px;
             font-weight: bold;
             border-bottom: 2px solid #dee2e6;
@@ -241,7 +282,14 @@
         }
 
         .text-center { text-align: center; }
-        .text-muted { color: #adb5bd; }
+        .alert-info {
+            padding: 15px;
+            background-color: #e2f0d9;
+            color: #385723;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -258,22 +306,22 @@
             </div>
 
             <ul class="sidebar-menu">
-                <a href="admin_dashboard.html" class="menu-item">
+                <a href="admin_dashboard.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">home</span>Dashboard
                 </a>
-                <a href="admin_data_petani.html" class="menu-item active">
+                <a href="admin_data_petani.php" class="menu-item active">
                     <span class="material-symbols-outlined menu-icon">person</span>Data Petani
                 </a>
-                <a href="#" class="menu-item">
+                <a href="admin_pengajuan.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">format_list_bulleted</span>Pengajuan
                 </a>
-                <a href="#" class="menu-item">
+                <a href="admin_bantuan.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">category</span>Bantuan
                 </a>
-                <a href="#" class="menu-item">
+                <a href="admin_laporan.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">description</span>Laporan
                 </a>
-                <a href="#" class="menu-item">
+                <a href="admin_profil.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">account_circle</span>Profil
                 </a>
             </ul>
@@ -285,86 +333,58 @@
             </div>
 
             <div class="search-add-bar">
-                <div class="search-box-container">
-                    <span class="material-symbols-outlined search-icon-inside">search</span>
-                    <input type="text" class="search-input" placeholder="Cari Berdasarkan Nama atau NIK">
-                </div>
-                <button class="btn-tambah" onclick="window.location.href='admin_tambah_petani.html'">
+                <form action="admin_data_petani.php" method="GET" class="search-form">
+                    <div class="search-box-container">
+                        <span class="material-symbols-outlined search-icon-inside">search</span>
+                        <input type="text" name="cari" class="search-input" placeholder="Cari Berdasarkan Nama atau NIK dan tekan Enter" value="<?php echo htmlspecialchars($keyword); ?>">
+                    </div>
+                </form>
+                
+                <a href="admin_tambah_petani.php" class="btn-tambah">
                     <span class="material-symbols-outlined">add</span>Tambah Petani
-                </button>
+                </a>
             </div>
 
-            <h3 class="list-info-text">Daftar Petani yang Terdaftar</h3>
+            <h3 class="list-info-text">
+                <?php echo (!empty($keyword)) ? "Hasil Pencarian untuk: '" . htmlspecialchars($keyword) . "'" : "Daftar Petani yang Terdaftar"; ?>
+            </h3>
 
             <div class="data-table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 8%;" class="text-center">No</th>
-                            <th style="width: 22%;">Nama</th>
-                            <th style="width: 15%;">NIK</th>
-                            <th style="width: 15%;">Komoditas</th>
-                            <th style="width: 25%;">Alamat</th>
+                            <th style="width: 5%;" class="text-center">No</th>
+                            <th style="width: 20%;">Nama</th>
+                            <th style="width: 18%;" class="text-center">NIK</th>
+                            <th style="width: 12%;">Komoditas</th>
+                            <th style="width: 30%;">Alamat</th>
                             <th style="width: 15%;">TTL</th>
                         </tr>
                     </thead>
                     <tbody>
+                        <?php 
+                        $no = 1;
+                        if (mysqli_num_rows($result) > 0) {
+                            while($row = mysqli_fetch_assoc($result)) { 
+                                $tanggal_format = date('d F Y', strtotime($row['tanggal_lahir']));
+                        ?>
                         <tr>
-                            <td class="text-center">1</td>
-                            <td>Hilda Sava</td>
-                            <td class="text-muted; text-center">-</td>
-                            <td>Padi</td>
-                            <td style="font-size: 12px;">Desa Kinong, 03/02,<br>Kec. Ciberium, Jawa Tengah</td>
-                            <td style="font-size: 12px;">Garut,<br>01 Januari 1980</td>
+                            <td class="text-center"><?php echo $no++; ?></td>
+                            <td><?php echo htmlspecialchars($row['nama_lengkap'] ?? ''); ?></td>
+                            <td class="text-center"><strong><?php echo htmlspecialchars($row['nik']); ?></strong></td>
+                            <td><?php echo htmlspecialchars($row['komoditas']); ?></td>
+                            <td style="font-size: 12px;"><?php echo htmlspecialchars($row['alamat']); ?></td>
+                            <td style="font-size: 12px;">
+                                <?php echo htmlspecialchars($row['tempat_lahir']); ?>,<br>
+                                <?php echo $tanggal_format; ?>
+                            </td>
                         </tr>
-                        <tr>
-                            <td class="text-center">2</td>
-                            <td>Fahrzatul</td>
-                            <td class="text-muted; text-center">-</td>
-                            <td>Jagung</td>
-                            <td style="font-size: 12px;">Desa Kinong, 03/02,<br>Kec. Ciberium, Jawa Tengah</td>
-                            <td style="font-size: 12px;">Cianjur,<br>21 Maret 1985</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center">3</td>
-                            <td>Sriwa</td>
-                            <td class="text-muted; text-center">-</td>
-                            <td>Cabai</td>
-                            <td style="font-size: 12px;">Desa Kinong, 03/02,<br>Kec. Ciberium, Jawa Tengah</td>
-                            <td style="font-size: 12px;">Mojokerto,<br>21 September 1977</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center">4</td>
-                            <td>Syahriza</td>
-                            <td class="text-muted; text-center">-</td>
-                            <td>Kedelai</td>
-                            <td style="font-size: 12px;">Desa Kinong, 03/02,<br>Kec. Ciberium, Jawa Tengah</td>
-                            <td style="font-size: 12px;">Malang,<br>06 April 1970</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center">5</td>
-                            <td>Alvira Libra</td>
-                            <td class="text-muted; text-center">-</td>
-                            <td>Padi</td>
-                            <td style="font-size: 12px;">Desa Kinong, 03/02,<br>Kec. Ciberium, Jawa Tengah</td>
-                            <td style="font-size: 12px;">Labak,<br>06 Maret 1991</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center">6</td>
-                            <td>Farhan Zhaldi</td>
-                            <td class="text-muted; text-center">-</td>
-                            <td>Kopi</td>
-                            <td style="font-size: 12px;">Desa Kinong, 03/02,<br>Kec. Ciberium, Jawa Tengah</td>
-                            <td style="font-size: 12px;">Bekasi,<br>27 Januari 1984</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center">7</td>
-                            <td>Talita</td>
-                            <td class="text-muted; text-center">-</td>
-                            <td>Cabai</td>
-                            <td style="font-size: 12px;">Desa Kinong, 03/02,<br>Kec. Ciberium, Jawa Tengah</td>
-                            <td style="font-size: 12px;">Majalengka,<br>10 desember 1972</td>
-                        </tr>
+                        <?php 
+                            }
+                        } else { 
+                            echo "<tr><td colspan='6' class='alert-info'>Data petani tidak ditemukan dengan kata kunci tersebut.</td></tr>";
+                        } 
+                        ?>
                     </tbody>
                 </table>
             </div>

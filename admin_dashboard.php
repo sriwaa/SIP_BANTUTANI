@@ -1,3 +1,53 @@
+<?php
+// 1. CEK APAKAH ADMIN SUDAH LOGIN ATAU BELUM
+session_start();
+
+// Jika tidak ada session username atau rolenya bukan Admin, tendang kembali ke login
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Admin') {
+    header("Location: admin_login.php");
+    exit();
+}
+
+// 2. KONEKSI DATABASE
+$host     = "localhost";
+$db_user  = "root";
+$db_pass  = "";
+$db_name  = "sip_bantutani";
+
+$koneksi = mysqli_connect($host, $db_user, $db_pass, $db_name);
+
+if (!$koneksi) {
+    die("Koneksi database gagal: " . mysqli_connect_error());
+}
+
+// 3. AMBIL TOTAL PETANI SECARA DINAMIS DARI DATABASE
+$query_petani = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM data_petani");
+$data_petani  = mysqli_fetch_assoc($query_petani);
+$total_petani = $data_petani['total'];
+
+// 4. AMBIL TOTAL PENGAJUAN SECARA DINAMIS DARI TABEL PENGAJUAN BANTUAN
+$query_pengajuan = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM admin_pengajuanbantuan");
+$data_pengajuan  = mysqli_fetch_assoc($query_pengajuan);
+$total_pengajuan = $data_pengajuan['total'];
+
+$sql_terbaru = "SELECT ap.nik, dp.nama_lengkap, ap.tanggal_pengajuan 
+                FROM admin_pengajuanbantuan ap
+                INNER JOIN admin_datapetani dp ON ap.nik = dp.nik
+                ORDER BY ap.id_pengajuan DESC 
+                LIMIT 10";
+$query_terbaru = mysqli_query($koneksi, $sql_terbaru);
+
+// Fungsi bantu untuk mengubah format tanggal ke teks Indonesia (ex: 2026-05-24 -> 24 Mei 2026)
+function formatTanggalIndonesia($tanggal) {
+    $bulan = [
+        1 => 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    $split = explode('-', $tanggal);
+    return $split[2] . ' ' . $bulan[(int)$split[1]] . ' ' . $split[0];
+}
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -94,7 +144,6 @@
             flex-direction: column;
         }
 
-        /* Mengubah menu item menjadi tag link 'a' agar bisa berpindah file */
         .menu-item {
             display: flex;
             align-items: center;
@@ -104,11 +153,10 @@
             font-weight: 600;
             transition: all 0.2s ease;
             gap: 15px;
-            text-decoration: none; /* Menghilangkan garis bawah link */
+            text-decoration: none; 
             cursor: pointer;
         }
 
-        /* Menu aktif khusus di halaman dashboard */
         .menu-item.active {
             background-color: rgba(255, 255, 255, 0.15);
             border-left: 5px solid #3bf789;
@@ -231,7 +279,7 @@
         }
 
         .data-table th {
-            background-color: #e9ecef; /* Abu-abu untuk dashboard */
+            background-color: #e9ecef; 
             color: #495057;
             padding: 14px 16px;
             font-weight: bold;
@@ -265,22 +313,22 @@
             </div>
 
             <ul class="sidebar-menu">
-                <a href="admin_dashboard.html" class="menu-item active">
+                <a href="admin_dashboard.php" class="menu-item active">
                     <span class="material-symbols-outlined menu-icon">home</span>Dashboard
                 </a>
-                <a href="admin_data_petani.html" class="menu-item">
+                <a href="admin_data_petani.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">person</span>Data Petani
                 </a>
-                <a href="#" class="menu-item">
+                <a href="admin_pengajuan.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">format_list_bulleted</span>Pengajuan
                 </a>
-                <a href="#" class="menu-item">
+                <a href="admin_bantuan.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">category</span>Bantuan
                 </a>
-                <a href="#" class="menu-item">
+                <a href="admin_laporan.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">description</span>Laporan
                 </a>
-                <a href="#" class="menu-item">
+                <a href="admin_profil.php" class="menu-item">
                     <span class="material-symbols-outlined menu-icon">account_circle</span>Profil
                 </a>
             </ul>
@@ -289,14 +337,14 @@
         <main class="main-content">
             <div class="page-header">
                 <h1 class="page-title">Dashboard</h1>
-                <p class="welcome-text">Selamat datang kembali, Admin</p>
+                <p class="welcome-text">Selamat datang kembali, <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong></p>
             </div>
 
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-info">
                         <span class="stat-label">Total Petani</span>
-                        <span class="stat-value">50</span>
+                        <span class="stat-value"><?php echo $total_petani; ?></span>
                     </div>
                     <div class="stat-icon-box">
                         <span class="material-symbols-outlined">group</span>
@@ -305,7 +353,7 @@
                 <div class="stat-card">
                     <div class="stat-info">
                         <span class="stat-label">Total Pengajuan</span>
-                        <span class="stat-value">50</span>
+                        <span class="stat-value"><?php echo $total_pengajuan; ?></span>
                     </div>
                     <div class="stat-icon-box">
                         <span class="material-symbols-outlined">list_alt</span>
@@ -326,24 +374,22 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="text-center">1</td>
-                                <td>330510001</td>
-                                <td>Alvira Libra Ramdhani</td>
-                                <td>10 Okt 2026</td>
-                            </tr>
-                            <tr>
-                                <td class="text-center">2</td>
-                                <td>330510002</td>
-                                <td>Hilda Sava Alzena</td>
-                                <td>10 Okt 2026</td>
-                            </tr>
-                            <tr>
-                                <td class="text-center">3</td>
-                                <td>330510003</td>
-                                <td>Sri Wahyuningsih</td>
-                                <td>10 Okt 2026</td>
-                            </tr>
+                            <?php 
+                            $no = 1;
+                            if (mysqli_num_rows($query_terbaru) > 0) {
+                                while ($row = mysqli_fetch_assoc($query_terbaru)) { ?>
+                                    <tr>
+                                        <td class="text-center"><?php echo $no++; ?></td>
+                                        <td><?php echo htmlspecialchars($row['nik']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['nama_lengkap']); ?></td>
+                                        <td><?php echo formatTanggalIndonesia($row['tanggal_pengajuan']); ?></td>
+                                    </tr>
+                                <?php } 
+                            } else { ?>
+                                <tr>
+                                    <td colspan="4" class="text-center" style="color: #6c757d; font-style: italic;">Belum ada data pengajuan bantuan terbaru.</td>
+                                </tr>
+                            <?php } ?>
                         </tbody>
                     </table>
                 </div>
