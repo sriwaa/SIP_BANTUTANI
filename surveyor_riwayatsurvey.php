@@ -1,33 +1,25 @@
 <?php
-// 1. CEK APAKAH SURVEYOR SUDAH LOGIN
+// 1. CEK LOGIN
 session_start();
-
 if (!isset($_SESSION['surveyor_id']) || $_SESSION['role'] !== 'surveyor') {
     header("Location: surveyor_login.php");
     exit();
 }
 
 // 2. KONEKSI DATABASE
-$host     = "localhost";
-$db_user  = "root";
-$db_pass  = "";
-$db_name  = "sip_bantutani";
+$host = "localhost"; $user = "root"; $pass = ""; $db = "sip_bantutani";
+$koneksi = mysqli_connect($host, $user, $pass, $db);
 
-$koneksi = mysqli_connect($host, $db_user, $db_pass, $db_name);
-
-if (!$koneksi) {
-    die("Koneksi gagal: " . mysqli_connect_error());
-}
-
-// Query diupdate: Menambahkan s.deadline_survey (LEFT JOIN ke admin_survey)
-$query_petani = mysqli_query($koneksi, "
-    SELECT p.nik, p.nama_lengkap, p.alamat, b.nama_program, a.tanggal_pengajuan, a.id_program, a.status_pengajuan, s.deadline_survey
-    FROM admin_pengajuanbantuan a
+// Query diupdate untuk mengambil nik dan id_program agar bisa digunakan di tombol detail
+$query_riwayat = mysqli_query($koneksi, "
+    SELECT p.nik, p.nama_lengkap, b.nama_program, b.id_program, a.status_pengajuan, s.tanggal_survey
+    FROM admin_survey s
+    JOIN admin_pengajuanbantuan a ON s.id_pengajuan = a.id_pengajuan
     JOIN admin_datapetani p ON a.nik = p.nik
     JOIN admin_programbantuan b ON a.id_program = b.id_program
-    LEFT JOIN admin_survey s ON a.id_pengajuan = s.id_pengajuan
-    WHERE a.status_pengajuan IN ('Tahap Survey', 'Draft', 'Selesai')
-    ORDER BY FIELD(a.status_pengajuan, 'Tahap Survey', 'Draft', 'Selesai'), a.tanggal_pengajuan ASC
+    WHERE a.status_pengajuan = 'Selesai' 
+    AND s.tanggal_survey IS NOT NULL
+    ORDER BY s.tanggal_survey DESC
 ");
 ?>
 
@@ -35,8 +27,7 @@ $query_petani = mysqli_query($koneksi, "
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIP-BANTU TANI - Tugas Lapangan</title>
+    <title>SIP-BANTU TANI - Riwayat Survey</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -63,13 +54,10 @@ $query_petani = mysqli_query($koneksi, "
         .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
         .data-table th { background-color: #f8f9fa; color: #495057; padding: 16px 20px; font-weight: bold; border-bottom: 2px solid #dee2e6; }
         .data-table td { padding: 16px 20px; color: #212529; border-bottom: 1px solid #dee2e6; }
-        .badge { background-color: #e8f5e9; color: #0d7839; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .btn-aksi { background-color: #13a851; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold; transition: 0.2s; }
-        .btn-aksi:hover { background-color: #0f8a42; }
+        .badge { background-color: #d4edda; color: #155724; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-logo-area">
@@ -79,8 +67,8 @@ $query_petani = mysqli_query($koneksi, "
             </div>
             <ul class="sidebar-menu">
                 <a href="surveyor_dashboard.php" class="menu-item"><span class="material-symbols-outlined">home</span>Dashboard</a>
-                <a href="surveyor_tugaslapangan.php" class="menu-item active"><span class="material-symbols-outlined">assignment</span>Tugas Lapangan</a>
-                <a href="surveyor_riwayatsurvey.php" class="menu-item"><span class="material-symbols-outlined">history</span>Riwayat Survey</a>
+                <a href="surveyor_tugaslapangan.php" class="menu-item"><span class="material-symbols-outlined">assignment</span>Tugas Lapangan</a>
+                <a href="surveyor_riwayatsurvey.php" class="menu-item active"><span class="material-symbols-outlined">history</span>Riwayat Survey</a>
                 <a href="surveyor_profil.php" class="menu-item"><span class="material-symbols-outlined">person</span>Profil</a>
                 <a href="surveyor_logout.php" class="menu-item" onclick="return confirm('Apakah kamu yakin ingin keluar dari sistem?');">
                     <span class="material-symbols-outlined">logout</span>Keluar
@@ -90,17 +78,17 @@ $query_petani = mysqli_query($koneksi, "
 
         <main class="main-content">
             <div class="page-header">
-                <h1 class="page-title">Tugas Lapangan</h1>
-                <p style="color: #6c757d;">Berikut adalah daftar pengajuan bantuan:</p>
+                <h1 class="page-title">Riwayat Survey</h1>
+                <p style="color: #6c757d;">Daftar survey yang telah diselesaikan.</p>
             </div>
             <div class="data-table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Petani</th>
-                            <th>Jenis Bantuan</th>
-                            <th>Deadline</th>
+                            <th>Nama Petani</th>
+                            <th>Program</th>
+                            <th>Tgl Selesai</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
@@ -108,21 +96,24 @@ $query_petani = mysqli_query($koneksi, "
                     <tbody>
                         <?php 
                         $no = 1;
-                        if (mysqli_num_rows($query_petani) > 0) {
-                            while ($row = mysqli_fetch_assoc($query_petani)) { ?>
+                        if (mysqli_num_rows($query_riwayat) > 0) {
+                            while ($row = mysqli_fetch_assoc($query_riwayat)) { ?>
                                 <tr>
-                                    <td><?php echo $no++; ?></td>
-                                    <td><strong><?php echo htmlspecialchars($row['nama_lengkap']); ?></strong><br><small style="color: #6c757d;"><?php echo $row['nik']; ?></small></td>
-                                    <td><span class="badge"><?php echo htmlspecialchars($row['nama_program']); ?></span></td>
-                                    <td><?php echo $row['deadline_survey'] ? date('d M Y', strtotime($row['deadline_survey'])) : '-'; ?></td>
-                                    <td><span style="font-weight:bold; color: <?= $row['status_pengajuan'] == 'Selesai' ? '#0d7839' : '#f39c12' ?>;"><?php echo $row['status_pengajuan']; ?></span></td>
-                                    <td><a href="surveyor_survey.php?nik=<?php echo $row['nik']; ?>&id_program=<?php echo $row['id_program']; ?>" class="btn-aksi">
-                                        <?= $row['status_pengajuan'] == 'Tahap Survey' ? 'Survey' : 'Edit' ?>
-                                    </a></td>
+                                    <td><?= $no++ ?></td>
+                                    <td><strong><?= htmlspecialchars($row['nama_lengkap']) ?></strong></td>
+                                    <td><?= htmlspecialchars($row['nama_program']) ?></td>
+                                    <td><?= date('d M Y', strtotime($row['tanggal_survey'])) ?></td>
+                                    <td><span class="badge"><?= $row['status_pengajuan'] ?></span></td>
+                                    <td>
+                                        <a href="surveyor_detailriwayat.php?nik=<?= $row['nik'] ?>&id_program=<?= $row['id_program'] ?>" 
+                                           style="background-color: #0d7839; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold;">
+                                           Lihat Detail
+                                        </a>
+                                    </td>
                                 </tr>
                             <?php } 
                         } else { ?>
-                            <tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Tidak ada tugas survei saat ini.</td></tr>
+                            <tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Belum ada riwayat survey.</td></tr>
                         <?php } ?>
                     </tbody>
                 </table>

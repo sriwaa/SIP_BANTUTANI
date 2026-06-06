@@ -56,7 +56,20 @@ if (isset($_POST['update_bantuan'])) {
                    WHERE id_program = $id_bantuan";
 
     if ($conn->query($sql_update) === TRUE) {
-        echo "<script>alert('Data bantuan berhasil diperbarui!'); window.location='admin_detailbantuan.php?id=$id_bantuan';</script>";
+        // --- LOGIKA RESET DATA ---
+        // 1. Reset status pengajuan menjadi 'Diproses'
+        $conn->query("UPDATE admin_pengajuanbantuan SET status_pengajuan = 'Diproses' WHERE id_program = $id_bantuan");
+        
+        // 2. Hapus data di tabel admin_survey yang terkait dengan program ini
+        $conn->query("DELETE s FROM admin_survey s 
+                      INNER JOIN admin_pengajuanbantuan p ON s.id_pengajuan = p.id_pengajuan 
+                      WHERE p.id_program = $id_bantuan");
+        
+        // 3. Hapus hasil perhitungan WP lama
+        $conn->query("DELETE FROM admin_hasilwp WHERE id_program = $id_bantuan");
+        // -------------------------
+
+        echo "<script>alert('Data bantuan diperbarui! Status pengajuan, survey, dan hasil WP telah direset.'); window.location='admin_detailbantuan.php?id=$id_bantuan';</script>";
     } else {
         echo "<script>alert('Gagal memperbarui data: " . $conn->error . "');</script>";
     }
@@ -111,7 +124,6 @@ $v_c5 = (!empty($data['c5_alat']) || $data['c5_alat'] === '0.00') ? (float)$data
             display: flex; overflow: hidden;
         }
 
-        /* SIDEBAR BRANDING ONLY (SELARAS TOTAL DENGAN TAMBAH BANTUAN) */
         .sidebar-brand-only {
             width: 280px; background-color: #0d7839; color: white;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -123,7 +135,6 @@ $v_c5 = (!empty($data['c5_alat']) || $data['c5_alat'] === '0.00') ? (float)$data
         .sidebar-title { font-size: 20px; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 6px; }
         .sidebar-subtitle { font-size: 12px; color: #d1e7dd; font-weight: 500; }
 
-        /* AREA KONTEN KANAN */
         .main-content { flex-grow: 1; background-color: white; padding: 40px 50px; overflow-y: auto; display: flex; flex-direction: column; }
         .back-nav { display: flex; align-items: center; gap: 12px; color: #0d7839; text-decoration: none; font-size: 28px; font-weight: 700; margin-bottom: 5px; }
         .back-icon { font-size: 32px; font-weight: bold; cursor: pointer; }
@@ -139,7 +150,6 @@ $v_c5 = (!empty($data['c5_alat']) || $data['c5_alat'] === '0.00') ? (float)$data
         .form-group label { font-size: 13px; font-weight: 700; color: #1b1c1e; }
         .form-group input, .form-group select, .form-group textarea { padding: 10px 14px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; color: #333; width: 100%; transition: all 0.2s; }
         
-        /* Desain Saat Kunci Terbuka/Tertutup */
         .form-group input:disabled, .form-group select:disabled, .form-group textarea:disabled { background-color: #f8f9fa; color: #6c757d; border-color: #e9ecef; cursor: not-allowed; }
 
         .kriteria-label { display: flex; justify-content: space-between; align-items: center; }
@@ -147,12 +157,10 @@ $v_c5 = (!empty($data['c5_alat']) || $data['c5_alat'] === '0.00') ? (float)$data
         .badge-benefit { background-color: #c9ebd6; color: #0d7839; }
         .badge-cost { background-color: #f8d7da; color: #dc3545; }
 
-        /* Kalkulator Bar */
         .total-bobot-bar { background-color: #f8f9fa; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; font-size: 14px; }
         .status-valid { color: #0d7839; }
         .status-invalid { color: #dc3545; }
 
-        /* FOOTER ACTIONS */
         .action-footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #dee2e6; }
         .btn-danger-action { background-color: #dc3545; color: white; border: none; padding: 11px 22px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; }
         .btn-danger-action:hover { background-color: #bd2130; }

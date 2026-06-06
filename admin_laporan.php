@@ -1,5 +1,12 @@
 <?php
-// 1. KONEKSI DATABASE
+// 1. PROTEKSI HALAMAN (Wajib Login Admin)
+session_start();
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Admin') {
+    header("Location: admin_login.php");
+    exit();
+}
+
+// 2. KONEKSI DATABASE
 $host = "localhost";
 $user = "root";
 $pass = "";
@@ -10,9 +17,9 @@ if ($conn->connect_error) { die("Koneksi gagal: " . $conn->connect_error); }
 
 $id_program = isset($_GET['id_program']) ? $_GET['id_program'] : '';
 
-// 2. QUERY AMBIL DATA
+// 3. QUERY AMBIL DATA (Sudah ditambah ap.id_pengajuan)
 $sql = "SELECT hw.ranking, hw.nik, dp.nama_lengkap, hw.vektor_v, pb.nama_program, 
-               ap.tanggal_pengajuan, ap.status_pengajuan, ap.bukti_survey 
+               ap.tanggal_pengajuan, ap.status_pengajuan, ap.bukti_survey, ap.id_pengajuan 
         FROM admin_hasilwp hw 
         JOIN admin_datapetani dp ON hw.nik = dp.nik 
         JOIN admin_programbantuan pb ON hw.id_program = pb.id_program
@@ -22,11 +29,8 @@ if (!empty($id_program)) {
     $sql .= " WHERE hw.id_program = " . intval($id_program);
 }
 
-// PERBAIKAN MUTLAK: Mengurutkan berdasarkan nilai Vektor V (Terbesar ke Terkecil)
-// Ini adalah standar metode WP untuk menentukan ranking secara otomatis
 $sql .= " ORDER BY hw.vektor_v DESC"; 
 $result = $conn->query($sql);
-
 $program_list = $conn->query("SELECT * FROM admin_programbantuan");
 ?>
 <!DOCTYPE html>
@@ -40,6 +44,7 @@ $program_list = $conn->query("SELECT * FROM admin_programbantuan");
         body { background-color: #fbc02d; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .dashboard-container { width: 100%; max-width: 1280px; height: 850px; max-height: 92vh; background-color: white; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); display: flex; overflow: hidden; }
         
+        /* SIDEBAR */
         .sidebar { width: 280px; background-color: #0d7839; color: white; display: flex; flex-direction: column; align-items: center; padding: 40px 0; flex-shrink: 0; }
         .sidebar-logo-area { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 20px; margin-bottom: 40px; }
         .sidebar-logo-bg { width: 90px; height: 90px; background-color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 2px solid #13a851; margin-bottom: 12px; }
@@ -47,11 +52,12 @@ $program_list = $conn->query("SELECT * FROM admin_programbantuan");
         .sidebar-title { font-size: 16px; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 4px; }
         .sidebar-subtitle { font-size: 11px; color: #d1e7dd; font-weight: 500; }
         .sidebar-menu { width: 100%; list-style: none; display: flex; flex-direction: column; }
-        .menu-item { display: flex; align-items: center; padding: 16px 28px; color: rgba(255, 255, 255, 0.8); font-size: 16px; font-weight: 600; text-decoration: none; gap: 15px; transition: all 0.2s; }
+        .menu-item { display: flex; align-items: center; padding: 16px 28px; color: rgba(255, 255, 255, 0.8); font-size: 16px; font-weight: 600; text-decoration: none; gap: 15px; transition: all 0.2s; cursor: pointer; }
         .menu-item.active { background-color: rgba(255, 255, 255, 0.15); border-left: 5px solid #3bf789; color: white; }
         .menu-item:hover { background-color: rgba(255, 255, 255, 0.1); color: white; padding-left: 33px; }
         .menu-icon { font-size: 22px; }
 
+        /* KONTEN */
         .main-content { flex-grow: 1; padding: 40px 50px; overflow-y: auto; display: flex; flex-direction: column; }
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #dee2e6; padding-bottom: 15px; }
         .page-title { color: #0d7839; font-size: 32px; font-weight: 700; }
@@ -59,9 +65,9 @@ $program_list = $conn->query("SELECT * FROM admin_programbantuan");
         select { padding: 10px 15px; border-radius: 8px; border: 1px solid #ced4da; font-size: 14px; cursor: pointer; }
         .data-table-container { width: 100%; border: 1px solid #ced4da; border-radius: 12px; overflow: hidden; }
         .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        .data-table th { background-color: #e2f3e9; color: #0d7839; padding: 16px; font-weight: 700; }
+        .data-table th { background-color: #f8f9fa; color: #0d7839; padding: 16px; font-weight: 700; border-bottom: 2px solid #dee2e6; }
         .data-table td { padding: 16px; color: #1b1c1e; border-bottom: 1px solid #dee2e6; }
-        .btn-print { background-color: #13a851; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; border: none; cursor: pointer; }
+        .btn-print { background-color: #13a851; color: white; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: 600; border: none; cursor: pointer; }
         .btn-lihat { background-color: #0d7839; color: white; padding: 5px 12px; border-radius: 5px; text-decoration: none; font-size: 12px; }
     </style>
 </head>
@@ -69,7 +75,7 @@ $program_list = $conn->query("SELECT * FROM admin_programbantuan");
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-logo-area">
-                <div class="sidebar-logo-bg"><img src="logo.png" class="sidebar-logo-img"></div>
+                <div class="sidebar-logo-bg"><img src="logo.png" alt="Logo" class="sidebar-logo-img"></div>
                 <h2 class="sidebar-title">SIP-BANTU TANI</h2>
                 <p class="sidebar-subtitle">Portal Resmi Bantuan Pertanian</p>
             </div>
@@ -78,6 +84,7 @@ $program_list = $conn->query("SELECT * FROM admin_programbantuan");
                 <a href="admin_data_petani.php" class="menu-item"><span class="material-symbols-outlined menu-icon">person</span>Data Petani</a>
                 <a href="admin_pengajuan.php" class="menu-item"><span class="material-symbols-outlined menu-icon">format_list_bulleted</span>Pengajuan</a>
                 <a href="admin_bantuan.php" class="menu-item"><span class="material-symbols-outlined menu-icon">category</span>Bantuan</a>
+                <a href="admin_survey.php" class="menu-item"><span class="material-symbols-outlined menu-icon">poll</span>Hasil Survey</a>
                 <a href="admin_laporan.php" class="menu-item active"><span class="material-symbols-outlined menu-icon">description</span>Laporan</a>
                 <a href="admin_profil.php" class="menu-item"><span class="material-symbols-outlined menu-icon">account_circle</span>Profil</a>
             </ul>
@@ -133,8 +140,8 @@ $program_list = $conn->query("SELECT * FROM admin_programbantuan");
                                     </span>
                                 </td>
                                 <td>
-                                    <?php if (!empty($row['bukti_survey'])): ?>
-                                        <a href="<?= $row['bukti_survey'] ?>" target="_blank" class="btn-lihat">Lihat Bukti</a>
+                                    <?php if (!empty($row['id_pengajuan'])): ?>
+                                        <a href="admin_laporandetail.php?id=<?= $row['id_pengajuan'] ?>" class="btn-lihat">Lihat Detail</a>
                                     <?php else: ?>
                                         <span style="color: #999; font-size: 12px;">-</span>
                                     <?php endif; ?>

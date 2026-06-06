@@ -25,6 +25,7 @@ $admin = $result->fetch_assoc();
         body { background-color: #fbc02d; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .dashboard-container { width: 100%; max-width: 1280px; height: 850px; max-height: 92vh; background-color: white; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); display: flex; overflow: hidden; }
         
+        /* SIDEBAR */
         .sidebar { width: 280px; background-color: #0d7839; color: white; display: flex; flex-direction: column; align-items: center; padding: 40px 0; flex-shrink: 0; }
         .sidebar-logo-area { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 20px; margin-bottom: 40px; }
         .sidebar-logo-bg { width: 90px; height: 90px; background-color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 2px solid #13a851; margin-bottom: 12px; }
@@ -37,9 +38,13 @@ $admin = $result->fetch_assoc();
         .menu-item:hover { background-color: rgba(255, 255, 255, 0.1); color: white; padding-left: 33px; }
         .menu-icon { font-size: 22px; }
 
-        .main-content { flex-grow: 1; padding: 40px 50px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+        /* KONTEN */
+        .main-content { flex-grow: 1; padding: 40px 50px; display: flex; flex-direction: column; overflow: hidden; }
         .header-row { width: 100%; margin-bottom: 30px; border-bottom: 1px solid #dee2e6; padding-bottom: 15px; }
         .page-title { color: #0d7839; font-size: 32px; font-weight: 700; }
+        
+        /* Area Scrollable */
+        .content-scroll { overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; align-items: center; padding-right: 10px; }
         
         .profile-card { width: 100%; max-width: 600px; text-align: center; }
         .profile-icon { font-size: 100px; color: #0d7839; margin-bottom: 10px; }
@@ -56,6 +61,7 @@ $admin = $result->fetch_assoc();
 </head>
 <body>
     <div class="dashboard-container">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo-area">
                 <div class="sidebar-logo-bg"><img src="logo.png" class="sidebar-logo-img"></div>
@@ -67,36 +73,42 @@ $admin = $result->fetch_assoc();
                 <a href="admin_data_petani.php" class="menu-item"><span class="material-symbols-outlined menu-icon">person</span>Data Petani</a>
                 <a href="admin_pengajuan.php" class="menu-item"><span class="material-symbols-outlined menu-icon">format_list_bulleted</span>Pengajuan</a>
                 <a href="admin_bantuan.php" class="menu-item"><span class="material-symbols-outlined menu-icon">category</span>Bantuan</a>
+                <a href="admin_survey.php" class="menu-item"><span class="material-symbols-outlined menu-icon">poll</span>Hasil Survey</a>
                 <a href="admin_laporan.php" class="menu-item"><span class="material-symbols-outlined menu-icon">description</span>Laporan</a>
                 <a href="admin_profil.php" class="menu-item active"><span class="material-symbols-outlined menu-icon">account_circle</span>Profil</a>
             </ul>
         </aside>
 
         <main class="main-content">
+            <!-- Header Fix -->
             <div class="header-row"><h1 class="page-title">Profil Admin</h1></div>
             
-            <div class="profile-card">
-                <span class="material-symbols-outlined profile-icon">account_circle</span>
-                <h2>M. Khamdan Azkiya</h2>
-                <p style="color: #0d7839; font-weight: bold; margin-bottom: 20px;">Admin</p>
+            <!-- Area Scroll -->
+            <div class="content-scroll">
+                <div class="profile-card">
+                    <span class="material-symbols-outlined profile-icon">account_circle</span>
+                    <h2>M. Khamdan Azkiya</h2>
+                    <p style="color: #0d7839; font-weight: bold; margin-bottom: 20px;">Admin</p>
 
-                <div class="data-box">
-                    <div class="data-row"><span>Nama Lengkap</span> <strong>M. Khamdan Azkiya</strong></div>
-                    <div class="data-row"><span>Email</span> <strong>khamdan123@gmail.com</strong></div>
-                    <div class="data-row"><span>No. HP</span> <strong>0821345678910</strong></div>
-                    <div class="data-row" style="border:none;"><span>Peran</span> <strong><?= $admin['role'] ?></strong></div>
+                    <div class="data-box">
+                        <div class="data-row"><span>Nama Lengkap</span> <strong>M. Khamdan Azkiya</strong></div>
+                        <div class="data-row"><span>Email</span> <strong>khamdan123@gmail.com</strong></div>
+                        <div class="data-row"><span>No. HP</span> <strong>0821345678910</strong></div>
+                        <div class="data-row" style="border:none;"><span>Peran</span> <strong><?= htmlspecialchars($admin['role']) ?></strong></div>
+                    </div>
+
+                    <a href="admin_profiledit.php" class="action-link">Edit Profil <span>></span></a>
+                    <a href="admin_ubahpassword.php" class="action-link">Ubah Password <span>></span></a>
+                    
+                    <a href="#" onclick="document.getElementById('logoutModal').style.display='flex'" class="btn-logout">
+                        <span class="material-symbols-outlined">logout</span>Keluar
+                    </a>
                 </div>
-
-                <a href="admin_profiledit.php" class="action-link">Edit Profil <span>></span></a>
-                <a href="admin_ubahpassword.php" class="action-link">Ubah Password <span>></span></a>
-                
-                <a href="#" onclick="document.getElementById('logoutModal').style.display='flex'" class="btn-logout">
-                    <span class="material-symbols-outlined">logout</span>Keluar
-                </a>
             </div>
         </main>
     </div>
 
+    <!-- Modal -->
     <div id="logoutModal" class="modal-overlay">
         <div class="modal-box">
             <span class="material-symbols-outlined" style="font-size: 50px; color: #d32f2f;">logout</span>

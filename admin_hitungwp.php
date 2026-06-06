@@ -95,27 +95,27 @@ if ($res_pendaftar && $res_pendaftar->num_rows > 0) {
         usort($alternatif, function($a, $b) { return $b['vektor_v'] <=> $a['vektor_v']; });
     }
 }
+
 $check = $conn->query("SELECT id_pengajuan FROM admin_pengajuanbantuan WHERE id_program = $id_bantuan AND status_pengajuan = 'Tahap Survey'");
 if ($check && $check->num_rows > 0) $sudah_dikirim = true;
 
-// ... kode yang sudah ada ...
-$check = $conn->query("SELECT id_pengajuan FROM admin_pengajuanbantuan WHERE id_program = $id_bantuan AND status_pengajuan = 'Tahap Survey'");
-if ($check && $check->num_rows > 0) $sudah_dikirim = true;
-
-// GANTI LOGIKA POST INI DI admin_hitungwp.php:
 if (isset($_POST['kirim_surveyor']) && !$sudah_dikirim) {
+    $deadline = date('Y-m-d', strtotime('+14 days'));
     $top_3 = array_slice($alternatif, 0, 3);
     foreach ($top_3 as $farmer) {
         $nik_survey = $farmer['nik'];
-        
-        // 1. Update status pengajuan
+        $res_id = $conn->query("SELECT id_pengajuan FROM admin_pengajuanbantuan WHERE id_program = $id_bantuan AND nik = '$nik_survey'");
+        $data_p = $res_id->fetch_assoc();
+        $id_pengajuan = $data_p['id_pengajuan'];
         $conn->query("UPDATE admin_pengajuanbantuan SET status_pengajuan = 'Tahap Survey' WHERE id_program = $id_bantuan AND nik = '$nik_survey'");
         
-        // 2. Simpan notifikasi ke database agar bisa dibaca petani
-        $pesan = "Selamat! Pengajuan Anda telah berhasil diproses ke Tahap Survey.";
+        // Memasukkan nama_surveyor 'Budi Santoso' secara permanen
+        $conn->query("INSERT INTO admin_survey (id_pengajuan, deadline_survey, nama_surveyor) VALUES ('$id_pengajuan', '$deadline', 'Budi Santoso')");
+        
+        $pesan = "Selamat! Pengajuan Anda telah berhasil diproses ke Tahap Survey. Deadline: $deadline";
         $conn->query("INSERT INTO admin_notifikasi (nik, pesan) VALUES ('$nik_survey', '$pesan')");
     }
-    echo "<script>alert('Berhasil! Status diupdate dan notifikasi dikirim ke petani.'); window.location.href='admin_hitungwp.php?id=$id_bantuan';</script>";
+    echo "<script>alert('Berhasil! Status diupdate dan data dikirim ke Surveyor (Budi Santoso).'); window.location.href='admin_hitungwp.php?id=$id_bantuan';</script>";
     exit;
 }
 ?>
@@ -128,56 +128,47 @@ if (isset($_POST['kirim_surveyor']) && !$sudah_dikirim) {
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #fbc02d; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        
         .dashboard-container { width: 100%; max-width: 1280px; height: 850px; max-height: 92vh; background-color: white; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); display: flex; overflow: hidden; }
-        
         .sidebar-brand-only { width: 280px; background-color: #0d7839; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0; flex-shrink: 0; }
         .brand-logo-bg { width: 90px; height: 90px; background-color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 2px solid #13a851; margin-bottom: 12px; }
         .brand-logo-img { width: 100%; height: 100%; object-fit: contain; }
         .brand-title { font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 4px; letter-spacing: 0.5px; }
         .brand-subtitle { font-size: 11px; color: #d1e7dd; text-align: center; font-weight: 500; }
-
-        .main-content { flex-grow: 1; padding: 30px 40px; overflow-y: auto; }
+        .main-content { flex-grow: 1; padding: 30px 40px; overflow-y: auto; display: flex; flex-direction: column; }
         .page-header { margin-bottom: 20px; border-bottom: 1px solid #dee2e6; padding-bottom: 15px; display: flex; align-items: center; gap: 15px; }
         .page-title { color: #0d7839; font-size: 28px; font-weight: 700; }
         .btn-back { color: #0d7839; display: flex; align-items: center; text-decoration: none; }
         
-        .data-table-container { border: 1px solid #dee2e6; border-radius: 8px; overflow-x: auto; margin-bottom: 20px; }
+        .data-table-container { border: 1px solid #dee2e6; border-radius: 8px; overflow-y: auto; max-height: 450px; margin-bottom: 20px; }
         .data-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 14px; }
-        .data-table th { background-color: #f8f9fa; color: #0d7839; padding: 16px; border-bottom: 2px solid #dee2e6; }
+        .data-table th { position: sticky; top: 0; background-color: #f8f9fa; color: #0d7839; padding: 16px; border-bottom: 2px solid #dee2e6; z-index: 10; }
         .data-table td { padding: 16px; border-bottom: 1px solid #dee2e6; }
+        
         .score-badge { font-weight: bold; color: #0d7839; background: #e6f4ea; padding: 4px 8px; border-radius: 4px; }
         .status-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
         .status-survey { background-color: #e3f2fd; color: #0d47a1; }
         .status-proses { background-color: #fff3e0; color: #e65100; }
         .btn-detail { background-color: #0d7839; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; }
-        .surveyor-section { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; }
+        .surveyor-section { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; margin-top: auto; }
         .surveyor-item { background: white; padding: 10px; border-radius: 6px; margin-bottom: 6px; border-left: 5px solid #13a851; display: flex; justify-content: space-between; }
         .btn-kirim-surveyor { background-color: #0288d1; color: white; padding: 12px; border-radius: 8px; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <div class="dashboard-container">
         <div class="sidebar-brand-only">
-            <div class="brand-logo-bg">
-                <img src="logo.png" alt="Logo" class="brand-logo-img">
-            </div>
+            <div class="brand-logo-bg"><img src="logo.png" alt="Logo" class="brand-logo-img"></div>
             <h2 class="brand-title">SIP-BANTU TANI</h2>
             <p class="brand-subtitle">Portal Resmi Bantuan Pertanian</p>
-            </div>
-        
+        </div>
         <main class="main-content">
             <div class="page-header">
                 <a href="admin_detailpengajuan.php" class="btn-back"><span class="material-symbols-outlined" style="font-size:32px;">arrow_back</span></a>
                 <h1 class="page-title">Hasil Perhitungan WP</h1>
             </div>
-            
             <div class="data-table-container">
                 <table class="data-table">
-                    <thead>
-                        <tr><th>Rank</th><th>NIK</th><th>Nama Petani</th><th>Vektor S</th><th>Vektor V</th><th>Status</th><th>Aksi</th></tr>
-                    </thead>
+                    <thead><tr><th>Rank</th><th>NIK</th><th>Nama Petani</th><th>Vektor S</th><th>Vektor V</th><th>Status</th><th>Aksi</th></tr></thead>
                     <tbody>
                         <?php 
                         $rank = 1;
@@ -200,7 +191,6 @@ if (isset($_POST['kirim_surveyor']) && !$sudah_dikirim) {
                     </tbody>
                 </table>
             </div>
-
             <?php if (!empty($alternatif)): ?>
                 <form method="POST" action="">
                     <div class="surveyor-section">
