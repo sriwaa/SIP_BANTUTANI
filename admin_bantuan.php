@@ -11,9 +11,14 @@ if ($conn->connect_error) {
     die("Koneksi ke database gagal: " . $conn->connect_error);
 }
 
-// 2. QUERY AMBIL DATA
+// 2. TENTUKAN FILTER STATUS
+$view = isset($_GET['view']) ? $_GET['view'] : 'aktif';
+$sql_condition = ($view == 'arsip') ? "WHERE status = 'Arsip'" : "WHERE status != 'Arsip'";
+
+// 3. QUERY AMBIL DATA
 $sql = "SELECT id_program AS id, nama_program AS nama_bantuan, gambar, deskripsi 
         FROM admin_programbantuan 
+        $sql_condition
         ORDER BY id_program ASC";
 $result = $conn->query($sql);
 ?>
@@ -48,7 +53,12 @@ $result = $conn->query($sql);
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #dee2e6; padding-bottom: 15px; }
         .page-title { color: #0d7839; font-size: 32px; font-weight: 700; }
         .btn-tambah-bantuan { background-color: #13a851; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(19, 168, 81, 0.15); }
-        .sub-header-text { color: #6c757d; font-size: 16px; font-weight: 500; margin-top: 10px; }
+        .sub-header-text { color: #6c757d; font-size: 16px; font-weight: 500; margin-top: 10px; margin-bottom: 10px; }
+        
+        /* TABS */
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab { text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 13px; color: #6c757d; background: #f0f0f0; }
+        .tab.active { background: #0d7839; color: white; }
 
         .list-scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 10px; }
         .bantuan-list-wrapper { display: flex; flex-direction: column; gap: 15px; }
@@ -90,6 +100,10 @@ $result = $conn->query($sql);
                     <a href="admin_tambahbantuan.php" class="btn-tambah-bantuan">+ Tambah Bantuan</a>
                 </div>
                 <p class="sub-header-text">Daftar Bantuan yang Terdaftar</p>
+                <div class="tabs">
+                    <a href="admin_bantuan.php?view=aktif" class="tab <?= ($view == 'aktif') ? 'active' : '' ?>">Bantuan Aktif</a>
+                    <a href="admin_bantuan.php?view=arsip" class="tab <?= ($view == 'arsip') ? 'active' : '' ?>">Arsip Bantuan</a>
+                </div>
             </div>
 
             <div class="list-scroll-area">
@@ -111,7 +125,7 @@ $result = $conn->query($sql);
                         </div>
                     <?php endwhile; 
                     else: ?>
-                        <p class="no-data">Belum ada daftar jenis bantuan saat ini.</p>
+                        <p class="no-data">Belum ada daftar bantuan dalam kategori ini.</p>
                     <?php endif; ?>
                 </div>
             </div>
